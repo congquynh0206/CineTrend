@@ -47,4 +47,30 @@ class NetworkManager {
             throw NetworkError.invalidData
         }
     }
+    
+    // Hàm lấy danh sách trailer của phim
+    func getMovieVideos(movieId: Int) async throws -> [Video] {
+        // Endpoint
+        let endpoint = "\(Constants.baseURL)/movie/\(movieId)/videos?api_key=\(Constants.apiKey)"
+        
+        guard let url = URL(string: endpoint) else {
+            throw NetworkError.invalidURL
+        }
+        
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw NetworkError.invalidResponse
+        }
+        
+        do {
+            let decoder = JSONDecoder()
+            let result = try decoder.decode(VideoResponse.self, from: data)
+            return result.results
+        } catch {
+            print("Lỗi decode video: \(error)")
+            throw NetworkError.invalidData
+        }
+        
+    }
 }

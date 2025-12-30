@@ -80,6 +80,12 @@ extension ViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        print("Bạn vừa bấm vào phim: \(movies[indexPath.row].originalTitle ?? "")")
+        print("Vừa bấm vào phim: \(movies[indexPath.row].originalTitle ?? "")")
+        
+        let selectedMovie = movies[indexPath.row]
+        
+        let detailMovie = DetailViewController()
+        detailMovie.movie = selectedMovie
+        navigationController?.pushViewController(detailMovie, animated: true)
     }
 }
