@@ -132,5 +132,26 @@ class NetworkManager {
     }
     
     
+    // Search
+    func searchMovies(query: String) async throws -> [Movie] {
+        // "Iron Man" -> "Iron%20Man"
+        guard let queryEncoded = query.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else {
+            throw NetworkError.invalidURL
+        }
+        
+        let endpoint = "\(Constants.baseURL)/search/movie?api_key=\(Constants.apiKey)&query=\(queryEncoded)"
+        
+        guard let url = URL(string: endpoint) else { throw NetworkError.invalidURL }
+        
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw NetworkError.invalidResponse
+        }
+        
+        let result = try JSONDecoder().decode(MovieResponse.self, from: data)
+        return result.results
+    }
+    
     
 }

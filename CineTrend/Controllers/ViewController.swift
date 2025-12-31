@@ -26,6 +26,7 @@ enum BrowseSection: Int {
 class ViewController: UIViewController {
 
     private var collectionView: UICollectionView!
+    private var searchTimer: Timer?
 
     var trendingMovies: [Movie] = []
     var nowPlayingMovies: [Movie] = []
@@ -34,11 +35,27 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        
         configureCollectionView()
         fetchData()
+        setupSearchController()
     }
     
+    // Search
+    func setupSearchController() {
+        // Tạo màn hình kết quả
+        let searchResultsVC = SearchResultsViewController()
+        
+        // Gán delegate để khi bấm vào phim ở màn search thì màn Home biết để push đi
+        searchResultsVC.delegate = self
+        
+        // Tạo Search Controller chứa màn hình kết quả
+        let searchController = UISearchController(searchResultsController: searchResultsVC)
+        searchController.searchResultsUpdater = self
+        searchController.searchBar.placeholder = "Search Movies"
+        
+        // Gắn vào Navigation Bar
+        navigationItem.searchController = searchController
+    }
 
     // Cấu hình view
     func configureCollectionView() {
@@ -53,6 +70,8 @@ class ViewController: UIViewController {
         
         // Đăng ký Header
         collectionView.register(SectionHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: SectionHeaderView.reuseIdentifier)
+        // Đăng ký Footer
+        collectionView.register(PagingFooterView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionFooter, withReuseIdentifier: PagingFooterView.reuseIdentifier)
         
         collectionView.delegate = self
         collectionView.dataSource = self
@@ -80,21 +99,48 @@ class ViewController: UIViewController {
         // Item
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 5, bottom: 0, trailing: 5)
+        item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10)
         
         // Group
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.9), heightDimension: .absolute(600))
+        //let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.9), heightDimension: .absolute(600))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.8), heightDimension: .absolute(480))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
         
         // Section - hàng
         let section = NSCollectionLayoutSection(group: group)
-        section.orthogonalScrollingBehavior = .groupPaging // Vuốt từng tấm một
-        section.contentInsets = NSDirectionalEdgeInsets(top: 20, leading: 10, bottom: 20, trailing: 10)
+        section.orthogonalScrollingBehavior = .groupPagingCentered
+        section.contentInsets = NSDirectionalEdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0)
         
         // Header
         let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(40))
         let header = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: headerSize, elementKind: UICollectionView.elementKindSectionHeader, alignment: .top)
         section.boundarySupplementaryItems = [header]
+        
+        // Footer
+        let footerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(30))
+        let footer = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: footerSize, elementKind: UICollectionView.elementKindSectionFooter, alignment: .bottom)
+        
+        section.boundarySupplementaryItems = [header, footer]
+        
+        section.visibleItemsInvalidationHandler = { [weak self] (visibleItems, offset, env) in
+            // offset.x là toạ độ x hiện tại
+            // env.container.contentSize.width là chiều rộng vùng hiển thị
+            let bannerWidth = env.container.contentSize.width
+            let page = Int(round(offset.x / bannerWidth))           // 300/300 = trang 1
+            
+            // Tìm cái Footer trong đám visibleItems để cập nhật
+            if let footerItem = visibleItems.first(where: { $0.representedElementKind == UICollectionView.elementKindSectionFooter }) {
+                
+                // Lấy View thực tế từ CollectionView
+                if let footerView = self?.collectionView.supplementaryView(forElementKind: UICollectionView.elementKindSectionFooter, at: footerItem.indexPath) as? PagingFooterView {
+                    
+                    // Cập nhật số trang
+                    // Kiểm tra xem trendingMovies có dữ liệu chưa
+                    let totalPages = self?.trendingMovies.count ?? 0
+                    footerView.configure(numberOfPages: totalPages, currentPage: page)
+                }
+            }
+        }
         
         return section
     }
@@ -194,15 +240,28 @@ extension ViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     
     // Hiển thị Header
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-        guard let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderView.reuseIdentifier, for: indexPath) as? SectionHeaderView else {
-            return UICollectionReusableView()
+        // Xử lý Header
+        if kind == UICollectionView.elementKindSectionHeader {
+            guard let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderView.reuseIdentifier, for: indexPath) as? SectionHeaderView else {
+                return UICollectionReusableView()
+            }
+            if let sectionType = BrowseSection(rawValue: indexPath.section) {
+                header.titleLabel.text = sectionType.title
+            }
+            return header
         }
         
-        if let sectionType = BrowseSection(rawValue: indexPath.section) {
-            header.titleLabel.text = sectionType.title
+        // Xử lý Footer, chỉ hiện ở Trending (Section 0)
+        if kind == UICollectionView.elementKindSectionFooter && indexPath.section == 0 {
+            guard let footer = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: PagingFooterView.reuseIdentifier, for: indexPath) as? PagingFooterView else {
+                return UICollectionReusableView()
+            }
+            // Tổng số trang = số phim Trending
+            footer.configure(numberOfPages: trendingMovies.count, currentPage: 0)
+            return footer
         }
         
-        return header
+        return UICollectionReusableView()
     }
     
     // Xử lý khi bấm vào phim
@@ -218,6 +277,57 @@ extension ViewController: UICollectionViewDelegate, UICollectionViewDataSource {
         
         let detailVC = DetailViewController()
         detailVC.movie = selectedMovie
+        navigationController?.pushViewController(detailVC, animated: true)
+    }
+}
+
+extension ViewController: UISearchResultsUpdating {
+    
+    func updateSearchResults(for searchController: UISearchController) {
+        
+        //  Hủy hẹn giờ cũ
+        searchTimer?.invalidate()
+        
+        guard let query = searchController.searchBar.text,
+              !query.trimmingCharacters(in: .whitespaces).isEmpty,
+              query.count >= 3, // Chỉ search khi gõ trên 3 kí tự
+              let resultsController = searchController.searchResultsController as? SearchResultsViewController else {
+            
+            // Nếu xoá hết chữ thì xoá list kết quả đi
+            if let resultsController = searchController.searchResultsController as? SearchResultsViewController {
+                resultsController.movies = []
+                resultsController.searchCollectionView.reloadData()
+            }
+            return
+        }
+        
+        // Tạo một hẹn giờ mới (Debounce)
+        searchTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { _ in
+            
+            // Gọi api
+            print("Đang search: \(query)")
+            
+            Task {
+                do {
+                    let movies = try await NetworkManager.shared.searchMovies(query: query)
+                    
+                    // Cập nhật UI
+                    DispatchQueue.main.async {
+                        resultsController.movies = movies
+                        resultsController.searchCollectionView.reloadData()
+                    }
+                } catch {
+                    print("Lỗi search: \(error)")
+                }
+            }
+        }
+    }
+}
+// Xử lý khi bấm vào phim ở màn Search (Delegate)
+extension ViewController: SearchResultsDelegate {
+    func didTapItem(_ movie: Movie) {
+        let detailVC = DetailViewController()
+        detailVC.movie = movie
         navigationController?.pushViewController(detailVC, animated: true)
     }
 }
