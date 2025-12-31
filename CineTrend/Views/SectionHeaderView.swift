@@ -9,6 +9,7 @@ import UIKit
 
 class SectionHeaderView: UICollectionReusableView {
     static let reuseIdentifier = "SectionHeaderView"
+    var onViewAllTap: (() -> Void)?
 
     let titleLabel: UILabel = {
         let label = UILabel()
@@ -29,6 +30,7 @@ class SectionHeaderView: UICollectionReusableView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         configureContents()
+        viewAllButton.addTarget(self, action: #selector(handleViewAllTap), for: .touchUpInside)
     }
 
     required init?(coder: NSCoder) {
@@ -48,5 +50,9 @@ class SectionHeaderView: UICollectionReusableView {
             viewAllButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
             viewAllButton.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
+    }
+    
+    @objc private func handleViewAllTap() {
+        onViewAllTap?()
     }
 }

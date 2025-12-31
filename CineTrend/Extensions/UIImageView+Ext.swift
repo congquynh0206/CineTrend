@@ -19,7 +19,7 @@ extension UIImageView {
         // Kiểm tra xem ảnh này đã tải lần nào chưa
         if let cachedImage = imageCache.object(forKey: urlString as NSString) {
             self.image = cachedImage
-            return // Có rồi thì dùng luôn, thoát hàm
+            return
         }
         
         guard let url = URL(string: urlString) else { return }

@@ -245,8 +245,32 @@ extension ViewController: UICollectionViewDelegate, UICollectionViewDataSource {
             guard let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderView.reuseIdentifier, for: indexPath) as? SectionHeaderView else {
                 return UICollectionReusableView()
             }
-            if let sectionType = BrowseSection(rawValue: indexPath.section) {
-                header.titleLabel.text = sectionType.title
+            
+            guard let sectionType = BrowseSection(rawValue: indexPath.section) else { return header }
+            // Set tên Header
+            header.titleLabel.text = sectionType.title
+            
+            header.onViewAllTap = { [weak self] in
+                guard let self = self else { return }
+                
+                // Khởi tạo màn hình View All
+                let gridVC = MovieGridViewController()
+                
+                // Truyền dữ liệu tương ứng với section
+                switch sectionType {
+                case .trending:
+                    gridVC.movies = self.trendingMovies
+                    gridVC.pageTitle = "Trending Now"
+                case .nowPlaying:
+                    gridVC.movies = self.nowPlayingMovies
+                    gridVC.pageTitle = "Now Playing"
+                case .upcoming:
+                    gridVC.movies = self.upcomingMovies
+                    gridVC.pageTitle = "Upcoming Movies"
+                }
+                
+                // Đẩy sang màn hình mới 
+                self.navigationController?.pushViewController(gridVC, animated: true)
             }
             return header
         }

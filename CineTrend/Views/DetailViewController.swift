@@ -84,6 +84,7 @@ class DetailViewController : UIViewController {
         summary.numberOfLines = 0
         summary.font = .systemFont(ofSize: 16, weight: .regular)
         summary.textColor = .label
+        summary.textAlignment = .justified
         summary.translatesAutoresizingMaskIntoConstraints = false
         return summary
     }()
@@ -125,6 +126,7 @@ class DetailViewController : UIViewController {
         configureData()
         getTrailer()
         getCast()
+        setupNavigationBar()
     }
     
     // Hàm xử lý khi bấm nút
@@ -249,6 +251,66 @@ class DetailViewController : UIViewController {
         }
     }
     
+    // Yêu thích
+    
+    private func setupNavigationBar() {
+        // Kiểm tra xem phim này đã tim chưa để hiện icon tương ứng
+        guard let movie = movie else { return }
+        let isFav = DataPersistenceManager.shared.checkIsFavorite(id: movie.id)
+        
+        let imageName = isFav ? "heart.fill" : "heart" // Đỏ hoặc Rỗng
+        let color: UIColor = isFav ? .systemRed : .label
+        
+        let heartButton = UIBarButtonItem(
+            image: UIImage(systemName: imageName),
+            style: .plain,
+            target: self,
+            action: #selector(didTapFavorite)
+        )
+        heartButton.tintColor = color
+        navigationItem.rightBarButtonItem = heartButton
+    }
+    
+    @objc private func didTapFavorite() {
+        guard let movie = movie else { return }
+        
+        // Kiểm tra trạng thái hiện tại
+        let isAlreadyFav = DataPersistenceManager.shared.checkIsFavorite(id: movie.id)
+        
+        if isAlreadyFav {
+            // Nếu đang tim thì xoá
+            DataPersistenceManager.shared.deleteMovieWith(id: movie.id) { [weak self] result in
+                switch result {
+                case .success():
+                    print("Đã xoá khỏi Yêu thích")
+                    // Update lại icon thành rỗng
+                    DispatchQueue.main.async {
+                        self?.navigationItem.rightBarButtonItem?.image = UIImage(systemName: "heart")
+                        self?.navigationItem.rightBarButtonItem?.tintColor = .label
+                    }
+                case .failure(let error):
+                    print("Lỗi xoá: \(error)")
+                }
+            }
+            
+        } else {
+            // Nếu chưa tim thì lưu
+            DataPersistenceManager.shared.downloadMovieWith(model: movie) { [weak self] result in
+                switch result {
+                case .success():
+                    print("Đã lưu vào Yêu thích")
+                    // Update lại icon thành tim đỏ
+                    DispatchQueue.main.async {
+                        self?.navigationItem.rightBarButtonItem?.image = UIImage(systemName: "heart.fill")
+                        self?.navigationItem.rightBarButtonItem?.tintColor = .systemRed
+                    }
+                case .failure(let error):
+                    print("Lỗi lưu: \(error)")
+                }
+            }
+        }
+    }
+    
     // Lấy danh sách dvien
     private func getCast() {
         guard let movie = movie else { return }
@@ -282,3 +344,4 @@ extension DetailViewController: UICollectionViewDataSource, UICollectionViewDele
         return cell
     }
 }
+
