@@ -20,14 +20,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         let window = UIWindow(windowScene: windowScene)
         
-        // Tạo màn hình chính
-        let rootVC = ViewController()
-        
-        // BỌC màn hình chính vào trong NavigationController
-        let navVC = UINavigationController(rootViewController: rootVC)
-        
         // Set Navigation làm gốc
-        window.rootViewController = navVC
+        window.rootViewController = MainTabBarViewController()
         
         self.window = window
         window.makeKeyAndVisible()

@@ -17,7 +17,14 @@ enum NetworkError: Error {
 class NetworkManager {
     
     static let shared = NetworkManager()
-    private init() {}
+    
+    private let session: URLSession
+    
+    private init() {
+        let config = URLSessionConfiguration.ephemeral
+        config.timeoutIntervalForRequest = 30
+        self.session = URLSession(configuration: config)
+    }
     
     // Hàm lấy phim Trending
     func getTrendingMovies() async throws -> [Movie] {
@@ -26,7 +33,7 @@ class NetworkManager {
         guard let url = URL(string: endpoint) else {
             throw NetworkError.invalidURL
         }
-        let (data, response) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await session.data(from: url)
         
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw NetworkError.invalidResponse
@@ -52,7 +59,7 @@ class NetworkManager {
             throw NetworkError.invalidURL
         }
         
-        let (data, response) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await session.data(from: url)
         
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else{
             throw NetworkError.invalidResponse
@@ -72,7 +79,7 @@ class NetworkManager {
             let endpoint = "\(Constants.baseURL)/movie/upcoming?api_key=\(Constants.apiKey)"
             guard let url = URL(string: endpoint) else { throw NetworkError.invalidURL }
             
-            let (data, response) = try await URLSession.shared.data(from: url)
+            let (data, response) = try await session.data(from: url)
             guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
                 throw NetworkError.invalidResponse
             }
@@ -92,7 +99,7 @@ class NetworkManager {
             throw NetworkError.invalidURL
         }
         
-        let (data, response) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await session.data(from: url)
         
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw NetworkError.invalidResponse
@@ -115,7 +122,7 @@ class NetworkManager {
         
         guard let url = URL(string: endpoint) else { throw NetworkError.invalidURL }
         
-        let (data, response) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await session.data(from: url)
         
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw NetworkError.invalidResponse
@@ -143,7 +150,7 @@ class NetworkManager {
         
         guard let url = URL(string: endpoint) else { throw NetworkError.invalidURL }
         
-        let (data, response) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await session.data(from: url)
         
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw NetworkError.invalidResponse

@@ -38,6 +38,18 @@ class MovieCellCollectionViewCell: UICollectionViewCell {
         }
         self.layoutIfNeeded()
     }
+    
+    // Core data
+    func configure(with model : MovieItem){
+        let fullURL = Constants.imageBaseURL + (model.poster_path ?? "")
+        self.posterImageView.downloadImage(from: fullURL)
+        self.titleLabel.text = model.title
+        
+        self.titleLabel.font = .systemFont(ofSize: 14, weight: .semibold)
+        self.titleLabel.textAlignment = .center
+        
+        self.posterHeightConstraint = self.posterHeightConstraint.setMultiplier(multiplier: 0.80)
+    }
 }
 
 extension NSLayoutConstraint {

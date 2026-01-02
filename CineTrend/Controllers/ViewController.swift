@@ -31,10 +31,26 @@ class ViewController: UIViewController {
     var trendingMovies: [Movie] = []
     var nowPlayingMovies: [Movie] = []
     var upcomingMovies: [Movie] = []
+    
+    //Loading
+    private let loadingSpinner: UIActivityIndicatorView = {
+        let spinner = UIActivityIndicatorView(style: .large)
+        spinner.color = .systemGray
+        spinner.hidesWhenStopped = true
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        return spinner
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
+        
+        view.addSubview(loadingSpinner)
+        NSLayoutConstraint.activate([
+            loadingSpinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadingSpinner.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+        
         configureCollectionView()
         fetchData()
         setupSearchController()
@@ -109,7 +125,7 @@ class ViewController: UIViewController {
         // Section - hàng
         let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .groupPagingCentered
-        section.contentInsets = NSDirectionalEdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 20, trailing: 0)
         
         // Header
         let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(40))
@@ -128,14 +144,13 @@ class ViewController: UIViewController {
             let bannerWidth = env.container.contentSize.width
             let page = Int(round(offset.x / bannerWidth))           // 300/300 = trang 1
             
-            // Tìm cái Footer trong đám visibleItems để cập nhật
+            // Tìm cái Footer để cập nhật
             if let footerItem = visibleItems.first(where: { $0.representedElementKind == UICollectionView.elementKindSectionFooter }) {
                 
                 // Lấy View thực tế từ CollectionView
                 if let footerView = self?.collectionView.supplementaryView(forElementKind: UICollectionView.elementKindSectionFooter, at: footerItem.indexPath) as? PagingFooterView {
                     
-                    // Cập nhật số trang
-                    // Kiểm tra xem trendingMovies có dữ liệu chưa
+                    // Cập nhật số trang và kiểm tra xem trendingMovies có dữ liệu chưa
                     let totalPages = self?.trendingMovies.count ?? 0
                     footerView.configure(numberOfPages: totalPages, currentPage: page)
                 }
@@ -171,6 +186,10 @@ class ViewController: UIViewController {
     
     // Fetch Data
     func fetchData() {
+        DispatchQueue.main.async {
+            self.loadingSpinner.startAnimating()
+            self.collectionView.isHidden = true
+        }
         Task {
             do {
                 // Gọi 3 API cùng lúc
@@ -186,10 +205,28 @@ class ViewController: UIViewController {
                 self.upcomingMovies = up
                 
                 DispatchQueue.main.async {
+                    self.loadingSpinner.stopAnimating()
+                    self.collectionView.isHidden = false
                     self.collectionView.reloadData()
+                    self.collectionView.layoutIfNeeded()
+                    
+                    if !self.trendingMovies.isEmpty {
+                        let midIndex = self.trendingMovies.count / 2
+                        let indexPath = IndexPath(item: midIndex, section: 0)
+                        self.collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: false)
+                    }
                 }
             } catch {
                 print("Lỗi tải dữ liệu: \(error)")
+                DispatchQueue.main.async {
+                    self.loadingSpinner.stopAnimating()
+                    let alert = UIAlertController(title: "Network Error", message: "Not connect.", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "Try Again", style: .default, handler: { [weak self]_ in
+                        self?.fetchData()
+                    }))
+                    
+                    self.present(alert, animated: true)
+                }
             }
         }
     }
