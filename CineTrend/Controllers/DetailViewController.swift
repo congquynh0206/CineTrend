@@ -114,6 +114,7 @@ class DetailViewController : UIViewController {
         return cv
     }()
     
+    // Similar movi
     private let similarTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "Similar Movies"
@@ -123,11 +124,11 @@ class DetailViewController : UIViewController {
         return label
     }()
     
-    // Danh sách diễn viên
+    // Danh sách phim tương đương
     private let similarCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        layout.itemSize = CGSize(width: 140, height: 220)
+        layout.itemSize = CGSize(width: 120, height: 240)
         layout.minimumLineSpacing = 16
         
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -246,7 +247,7 @@ class DetailViewController : UIViewController {
             similarCollectionView.topAnchor.constraint(equalTo: similarTitleLabel.bottomAnchor, constant: 10),
             similarCollectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor,constant: 16),
             similarCollectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor,constant: -16),
-            similarCollectionView.heightAnchor.constraint(equalToConstant: 220),
+            similarCollectionView.heightAnchor.constraint(equalToConstant: 240),
             
             similarCollectionView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
         ])

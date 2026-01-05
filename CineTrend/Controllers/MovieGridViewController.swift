@@ -18,7 +18,7 @@ class MovieGridViewController: UIViewController {
         let layout = UICollectionViewFlowLayout()
         // Chia 3 cột
         let itemWidth = UIScreen.main.bounds.width / 3 - 10
-        layout.itemSize = CGSize(width: itemWidth, height: 180)
+        layout.itemSize = CGSize(width: itemWidth, height: itemWidth * 2)
         layout.minimumInteritemSpacing = 5
         layout.minimumLineSpacing = 10
         layout.sectionInset = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)

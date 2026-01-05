@@ -91,7 +91,7 @@ class PersonViewController : UIViewController{
     private let moviesCollectionView : UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        layout.itemSize = CGSize(width: 120, height: 180)
+        layout.itemSize = CGSize(width: 120, height: 240)
         
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .clear
@@ -159,7 +159,7 @@ class PersonViewController : UIViewController{
             jobLabel.leadingAnchor.constraint(equalTo: nameLabel.leadingAnchor),
             jobLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 4),
             
-            // Bio (Nằm dưới Avatar)
+            // Bio
             bioLabel.topAnchor.constraint(equalTo: jobLabel.bottomAnchor, constant: 5),
             bioLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             bioLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
@@ -172,7 +172,7 @@ class PersonViewController : UIViewController{
             moviesCollectionView.topAnchor.constraint(equalTo: knownForTitleLabel.bottomAnchor, constant: 12),
             moviesCollectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             moviesCollectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            moviesCollectionView.heightAnchor.constraint(equalToConstant: 180),
+            moviesCollectionView.heightAnchor.constraint(equalToConstant: 240),
             
             // Neo đáy để ScrollView
             moviesCollectionView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)

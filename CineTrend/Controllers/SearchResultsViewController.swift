@@ -19,7 +19,8 @@ class SearchResultsViewController: UIViewController {
     
     public let searchCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
-        layout.itemSize = CGSize(width: UIScreen.main.bounds.width / 3 - 10, height: 180) // Chia 3 cột
+        let itemWidth = UIScreen.main.bounds.width / 3 - 10
+        layout.itemSize = CGSize(width: itemWidth, height: itemWidth * 2) // Chia 3 cột
         layout.minimumInteritemSpacing = 5
         layout.sectionInset = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
