@@ -97,7 +97,8 @@ extension FavoritesViewController : UICollectionViewDelegate, UICollectionViewDa
             posterPath: item.poster_path,
             backDropPath: nil,
             releaseDate: nil,
-            voteAverage: item.vote_average
+            voteAverage: item.vote_average,
+            popularity: nil
         )
         detailVc.movie = movie
         

@@ -423,6 +423,12 @@ extension DetailViewController: UICollectionViewDataSource, UICollectionViewDele
             let detailVC = DetailViewController()
             detailVC.movie = selectedMovie
             navigationController?.pushViewController(detailVC, animated: true)
+        }else if collectionView == castCollectionView {
+            let selectedPerson = castList[indexPath.row]
+            
+            let detaiPerson = PersonViewController()
+            detaiPerson.personId = selectedPerson.id
+            navigationController?.pushViewController(detaiPerson, animated: true)
         }
     }
 }

@@ -160,6 +160,46 @@ class NetworkManager {
     }
     
     
+    
+    // Lấy thông tin của 1 dvien
+    func getPersonDetail (id: Int) async throws-> Person{
+        let endpoint = "\(Constants.baseURL)/person/\(id)?api_key=\(Constants.apiKey)"
+        guard let url = URL(string: endpoint) else{
+            throw NetworkError.invalidURL
+        }
+        
+        let (data, response) = try await session.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw NetworkError.invalidResponse
+        }
+        do {
+            return try JSONDecoder().decode(Person.self, from: data)
+        }catch{
+            print("Lỗi lấy tt dvien")
+            throw NetworkError.invalidData
+        }
+    }
+    
+    // Lấy danh sách phim đã đóng của 1 dvien
+    func getPersonMovieCredits(id: Int) async throws -> [Movie] {
+        let endpoint = "\(Constants.baseURL)/person/\(id)/movie_credits?api_key=\(Constants.apiKey)"
+        guard let url = URL(string: endpoint) else { throw NetworkError.invalidURL }
+        
+        let (data, response) = try await session.data(from: url)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw NetworkError.invalidResponse
+        }
+        
+        let result = try JSONDecoder().decode(PersonMovieCreditsResponse.self, from: data)
+        // Lọc bớt phim không có poster
+        let movies = result.cast
+            .filter { $0.posterPath != nil }
+            .sorted { ($0.popularity ?? 0) > ($1.popularity ?? 0) }
+        return movies
+    }
+    
+    
     // Search
     func searchMovies(query: String) async throws -> [Movie] {
         // "Iron Man" -> "Iron%20Man"

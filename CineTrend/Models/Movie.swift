@@ -20,6 +20,7 @@ struct Movie: Codable {
     let backDropPath: String?
     let releaseDate: String?
     let voteAverage: Double
+    let popularity : Double?
     
     // Map sang tên của json
     enum CodingKeys: String, CodingKey {
@@ -31,6 +32,7 @@ struct Movie: Codable {
         case posterPath = "poster_path"
         case releaseDate = "release_date"
         case voteAverage = "vote_average"
+        case popularity
     }
 }
 
