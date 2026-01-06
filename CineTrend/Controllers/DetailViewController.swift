@@ -187,6 +187,7 @@ class DetailViewController : UIViewController {
         let detaiGrid = MovieGridViewController()
         detaiGrid.movies = similarMovies
         detaiGrid.pageTitle = "Similar Movies"
+        detaiGrid.listType = .none
         navigationController?.pushViewController(detaiGrid, animated: true)
     }
     
@@ -252,20 +253,25 @@ class DetailViewController : UIViewController {
             summary.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             summary.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             
+            // The cast label
             castTitleLabel.topAnchor.constraint(equalTo: summary.bottomAnchor, constant: 16),
             castTitleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             
+            // The Cast List
             castCollectionView.topAnchor.constraint(equalTo: castTitleLabel.bottomAnchor, constant: 10),
             castCollectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor,constant: 16),
             castCollectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             castCollectionView.heightAnchor.constraint(equalToConstant: 120),
             
+            // Similar label
             similarTitleLabel.topAnchor.constraint(equalTo: castCollectionView.bottomAnchor, constant: 24),
             similarTitleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             
+            // View All button
             viewAllButton.centerYAnchor.constraint(equalTo: similarTitleLabel.centerYAnchor),
             viewAllButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             
+            // Similar
             similarCollectionView.topAnchor.constraint(equalTo: similarTitleLabel.bottomAnchor, constant: 10),
             similarCollectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor,constant: 16),
             similarCollectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor,constant: -16),
@@ -349,6 +355,7 @@ class DetailViewController : UIViewController {
                 switch result {
                 case .success():
                     print("Đã xoá khỏi Yêu thích")
+                    NotificationCenter.default.post(name: NSNotification.Name("changedDatabase"), object: nil)
                     // Update lại icon thành rỗng
                     DispatchQueue.main.async {
                         self?.navigationItem.rightBarButtonItem?.image = UIImage(systemName: "heart")
@@ -365,6 +372,7 @@ class DetailViewController : UIViewController {
                 switch result {
                 case .success():
                     print("Đã lưu vào Yêu thích")
+                    NotificationCenter.default.post(name: NSNotification.Name("changedDatabase"), object: nil)
                     // Update lại icon thành tim đỏ
                     DispatchQueue.main.async {
                         self?.navigationItem.rightBarButtonItem?.image = UIImage(systemName: "heart.fill")

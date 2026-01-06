@@ -20,7 +20,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         let window = UIWindow(windowScene: windowScene)
         
-        // Set Navigation làm gốc
+        // Root
         window.rootViewController = MainTabBarViewController()
         
         self.window = window

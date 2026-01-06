@@ -35,9 +35,6 @@ class FavoritesViewController : UIViewController{
         let nib = UINib(nibName: "MovieCellCollectionViewCell", bundle: nil)
         collectionView.register(nib, forCellWithReuseIdentifier: "MovieCellId")
         
-        // Lần đầu vào thì tải dữ liệu
-        fetchLocalStorageForDownload()
-        
         // Nếu bên Detail có thay dodoir thì bên này tự cập nhật
         NotificationCenter.default.addObserver(forName: NSNotification.Name("changedDatabase"), object: nil, queue: .main) { [weak self] _ in
             self?.fetchLocalStorageForDownload()

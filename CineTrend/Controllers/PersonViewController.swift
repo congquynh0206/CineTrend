@@ -43,7 +43,7 @@ class PersonViewController : UIViewController{
         iv.clipsToBounds = true
         iv.layer.cornerRadius = 12
         iv.layer.borderWidth = 2
-        iv.layer.borderColor = UIColor.systemBackground.cgColor
+        iv.layer.borderColor = UIColor.blue.cgColor
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
@@ -81,10 +81,20 @@ class PersonViewController : UIViewController{
     private let knownForTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "Known for"
-        label.textColor = .secondaryLabel
+        label.textColor = .orange
         label.font = .systemFont(ofSize: 18, weight: .semibold)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+    
+    // View All
+    private let viewAllButton : UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("View all", for: .normal)
+        button.setTitleColor(.systemRed, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
     }()
     
     // Phim
@@ -103,8 +113,18 @@ class PersonViewController : UIViewController{
     override func viewDidLoad(){
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
+        viewAllButton.addTarget(self, action: #selector(handleViewAll), for: .touchUpInside)
         setupUI()
         fetchData()
+    }
+    
+    // Xử lý view all button
+    @objc private func handleViewAll (){
+        let detaiGrid = MovieGridViewController()
+        detaiGrid.movies = movies
+        detaiGrid.pageTitle = "Similar Movies"
+        detaiGrid.listType = .none
+        navigationController?.pushViewController(detaiGrid, animated: true)
     }
     
     private func setupUI() {
@@ -118,6 +138,7 @@ class PersonViewController : UIViewController{
         contentView.addSubview(bioLabel)
         contentView.addSubview(knownForTitleLabel)
         contentView.addSubview(moviesCollectionView)
+        contentView.addSubview(viewAllButton)
         
         // Setup CollectionView
         moviesCollectionView.delegate = self
@@ -167,6 +188,10 @@ class PersonViewController : UIViewController{
             // Known for
             knownForTitleLabel.topAnchor.constraint(equalTo: bioLabel.bottomAnchor, constant: 24),
             knownForTitleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            
+            // View All button
+            viewAllButton.centerYAnchor.constraint(equalTo: knownForTitleLabel.centerYAnchor),
+            viewAllButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             
             // List phim
             moviesCollectionView.topAnchor.constraint(equalTo: knownForTitleLabel.bottomAnchor, constant: 12),
