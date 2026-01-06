@@ -43,7 +43,9 @@ class NetworkManager {
         do {
             let decoder = JSONDecoder()
             let result = try decoder.decode(MovieResponse.self, from: data)
-            return result.results
+            let movies = result.results
+                .filter { $0.posterPath != nil }
+            return movies
         } catch {
             print("Lỗi dịch dữ liệu: \(error)")
             throw NetworkError.invalidData
@@ -64,7 +66,9 @@ class NetworkManager {
         }
         do{
             let result = try JSONDecoder().decode(MovieResponse.self, from: data)
-            return result.results
+            let movies = result.results
+                .filter { $0.posterPath != nil }
+            return movies
         }catch{
             print ("Loi lay phim lien quan")
             throw NetworkError.invalidData
@@ -88,7 +92,9 @@ class NetworkManager {
         do {
             let decoder = JSONDecoder()
             let result = try decoder.decode(MovieResponse.self, from: data)
-            return result.results
+            let movies = result.results
+                .filter { $0.posterPath != nil }
+            return movies
         }catch {
             throw NetworkError.invalidData
         }
@@ -104,9 +110,14 @@ class NetworkManager {
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw NetworkError.invalidResponse
         }
-        
-        let result = try JSONDecoder().decode(MovieResponse.self, from: data)
-        return result.results
+        do{
+            let result = try JSONDecoder().decode(MovieResponse.self, from: data)
+            let movies = result.results
+                .filter { $0.posterPath != nil }
+            return movies
+        }catch{
+            throw NetworkError.invalidData
+        }
     }
     
     
@@ -218,7 +229,9 @@ class NetworkManager {
         }
         
         let result = try JSONDecoder().decode(MovieResponse.self, from: data)
-        return result.results
+        let movies = result.results
+            .filter { $0.posterPath != nil }
+        return movies
     }
     
     
