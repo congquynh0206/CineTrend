@@ -124,6 +124,17 @@ class DetailViewController : UIViewController {
         return label
     }()
     
+    // View All
+    private let viewAllButton : UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("View all", for: .normal)
+        button.setTitleColor(.systemRed, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 14)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    
     // Danh sách phim tương đương
     private let similarCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -138,11 +149,10 @@ class DetailViewController : UIViewController {
         return cv
     }()
     
-    
-    
     override func viewDidLoad(){
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
+        viewAllButton.addTarget(self, action: #selector(handleViewAll), for: .touchUpInside)
         
         castCollectionView.register(CastCell.self, forCellWithReuseIdentifier: CastCell.identifier)
         castCollectionView.dataSource = self
@@ -172,6 +182,14 @@ class DetailViewController : UIViewController {
         }
     }
     
+    // Xử lý view all button
+    @objc private func handleViewAll (){
+        let detaiGrid = MovieGridViewController()
+        detaiGrid.movies = similarMovies
+        detaiGrid.pageTitle = "Similar Movies"
+        navigationController?.pushViewController(detaiGrid, animated: true)
+    }
+    
     private func setUpUI(){
         view.addSubview(scrollView)
         
@@ -187,6 +205,7 @@ class DetailViewController : UIViewController {
         contentView.addSubview(castCollectionView)
         contentView.addSubview(similarTitleLabel)
         contentView.addSubview(similarCollectionView)
+        contentView.addSubview(viewAllButton)
         
         NSLayoutConstraint.activate([
             // scroll
@@ -243,6 +262,9 @@ class DetailViewController : UIViewController {
             
             similarTitleLabel.topAnchor.constraint(equalTo: castCollectionView.bottomAnchor, constant: 24),
             similarTitleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            
+            viewAllButton.centerYAnchor.constraint(equalTo: similarTitleLabel.centerYAnchor),
+            viewAllButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             
             similarCollectionView.topAnchor.constraint(equalTo: similarTitleLabel.bottomAnchor, constant: 10),
             similarCollectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor,constant: 16),
