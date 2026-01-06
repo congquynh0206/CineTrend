@@ -10,6 +10,7 @@ import UIKit
 class PersonViewController : UIViewController{
     var personId : Int = 0
     private var movies : [Movie] = []
+    private var isExpand = false
     
     // Scroll View
     private let scrollView : UIScrollView = {
@@ -25,7 +26,7 @@ class PersonViewController : UIViewController{
         return cv
     }()
     
-    // Background Image với gradient overlay
+    // Background Image
     private let headerImageView : UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFill
@@ -41,14 +42,13 @@ class PersonViewController : UIViewController{
         gradient.colors = [
             UIColor.clear.cgColor,
             UIColor.systemBackground.withAlphaComponent(0.3).cgColor,
-            UIColor.systemBackground.withAlphaComponent(0.1).cgColor,
             UIColor.systemBackground.cgColor
         ]
-        gradient.locations = [0.0, 0.5, 0.8, 1.0]
+        gradient.locations = [0.0, 0.7 , 1.0]
         return gradient
     }()
     
-    // Card container cho thông tin profile
+    // Container info
     private let profileCard: UIView = {
         let view = UIView()
         view.backgroundColor = .secondarySystemBackground
@@ -61,7 +61,7 @@ class PersonViewController : UIViewController{
         return view
     }()
     
-    // Avatar với shadow và border gradient
+    // Avatar
     private let avatarImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFill
@@ -70,18 +70,11 @@ class PersonViewController : UIViewController{
         iv.layer.borderWidth = 1
         iv.layer.borderColor = UIColor.white.cgColor
         iv.backgroundColor = .systemGray5
-        
-        // Shadow cho avatar
-        iv.layer.shadowColor = UIColor.black.cgColor
-        iv.layer.shadowOpacity = 0.3
-        iv.layer.shadowOffset = CGSize(width: 0, height: 4)
-        iv.layer.shadowRadius = 8
-        
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
     
-    // Tên người với màu nổi bật
+    // Tên
     private let nameLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 26, weight: .bold)
@@ -91,6 +84,7 @@ class PersonViewController : UIViewController{
         return label
     }()
     
+    // Job
     private let jobLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 15, weight: .semibold)
@@ -99,7 +93,7 @@ class PersonViewController : UIViewController{
         return label
     }()
     
-    // Biography title
+    // Bio label
     private let bioTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "Biography"
@@ -109,14 +103,19 @@ class PersonViewController : UIViewController{
         return label
     }()
     
-    // Tiểu sử
-    private let bioLabel: UILabel = {
+    // Bio
+    private lazy var bioLabel: UILabel = {
         let label = UILabel()
-        label.numberOfLines = 0
+        label.numberOfLines = 3
         label.font = .systemFont(ofSize: 15, weight: .regular)
         label.textColor = .secondaryLabel
         label.textAlignment = .justified
         label.translatesAutoresizingMaskIntoConstraints = false
+        
+        
+        label.isUserInteractionEnabled = true
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapSummary))
+        label.addGestureRecognizer(tapGesture)
         return label
     }()
     
@@ -165,6 +164,15 @@ class PersonViewController : UIViewController{
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         gradientLayer.frame = headerImageView.bounds
+    }
+    
+    // Xử lý thu, mở bio
+    @objc private func didTapSummary(){
+        isExpand.toggle()
+        bioLabel.numberOfLines = isExpand ? 0 : 3
+        UIView.animate(withDuration: 0.3) {
+            self.view.layoutIfNeeded()
+        }
     }
     
     // Xử lý view all button
@@ -245,7 +253,6 @@ class PersonViewController : UIViewController{
             jobLabel.trailingAnchor.constraint(equalTo: jobLabel.trailingAnchor, constant: -12),
             jobLabel.centerYAnchor.constraint(equalTo: jobLabel.centerYAnchor),
             
-            // Bottom của card phải dưới cùng avatar hoặc job
             profileCard.bottomAnchor.constraint(equalTo: avatarImageView.bottomAnchor, constant: 20),
             
             // Biography Title
@@ -304,27 +311,10 @@ class PersonViewController : UIViewController{
         }
     }
     
+
     private func updateUI(with person: Person) {
         nameLabel.text = person.name
-        
-        // Thêm icon cho job
-        if let job = person.knownForDepartment {
-            let icon: String
-            switch job.lowercased() {
-            case "acting":
-                icon = ""
-            case "directing":
-                icon = "🎬 "
-            case "writing":
-                icon = "✍️ "
-            case "production":
-                icon = "🎞️ "
-            default:
-                icon = "⭐ "
-            }
-            jobLabel.text = icon + job
-        }
-        
+        jobLabel.text = person.knownForDepartment
         bioLabel.text = person.biography.isEmpty ? "No biography available." : person.biography
         
         if let path = person.profilePath {

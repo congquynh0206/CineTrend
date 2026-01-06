@@ -30,14 +30,14 @@ class DetailViewController : UIViewController {
         let gradient = CAGradientLayer()
         gradient.colors = [
             UIColor.clear.cgColor,
-            UIColor.systemBackground.withAlphaComponent(0.1).cgColor,
+            UIColor.systemBackground.withAlphaComponent(0.2).cgColor,
             UIColor.systemBackground.cgColor
         ]
         gradient.locations = [0.0, 0.7, 1.0]
         return gradient
     }()
     
-    // Ảnh bìa với corner radius
+    // Background image
     private let backImage : UIImageView = {
         let bi = UIImageView()
         bi.contentMode = .scaleAspectFill
@@ -47,7 +47,7 @@ class DetailViewController : UIViewController {
         return bi
     }()
     
-    // Container cho thông tin chính
+    // Container info
     private let infoCard: UIView = {
         let view = UIView()
         view.backgroundColor = .secondarySystemBackground
@@ -60,7 +60,7 @@ class DetailViewController : UIViewController {
         return view
     }()
     
-    // Button với gradient
+    // YTB Button
     private let youtubeButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("▶ Watch Trailer", for: .normal)
@@ -74,7 +74,7 @@ class DetailViewController : UIViewController {
         let gradientLayer = CAGradientLayer()
         gradientLayer.colors = [
             UIColor.systemRed.cgColor,
-            UIColor(red: 0.8, green: 0.1, blue: 0.2, alpha: 1).cgColor
+            UIColor(red: 0.6, green: 0.0, blue: 0.05, alpha: 1).cgColor
         ]
         gradientLayer.startPoint = CGPoint(x: 0, y: 0.5)
         gradientLayer.endPoint = CGPoint(x: 1, y: 0.5)
@@ -123,6 +123,7 @@ class DetailViewController : UIViewController {
         summary.textColor = .secondaryLabel
         summary.textAlignment = .justified
         summary.translatesAutoresizingMaskIntoConstraints = false
+        
         return summary
     }()
     
