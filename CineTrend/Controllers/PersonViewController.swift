@@ -1,6 +1,6 @@
 //
 //  PersonViewController.swift
-//  CineTrend
+//  CineTrend - Modern Design
 //
 //  Created by Trangptt on 5/1/26.
 //
@@ -25,43 +25,86 @@ class PersonViewController : UIViewController{
         return cv
     }()
     
-    //Background Img
+    // Background Image với gradient overlay
     private let headerImageView : UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
-        iv.alpha = 0.9
         iv.translatesAutoresizingMaskIntoConstraints = false
-        iv.backgroundColor = .black
+        iv.backgroundColor = .systemGray6
         return iv
     }()
     
-    // Avatar
+    // Gradient overlay cho header
+    private let gradientLayer: CAGradientLayer = {
+        let gradient = CAGradientLayer()
+        gradient.colors = [
+            UIColor.clear.cgColor,
+            UIColor.systemBackground.withAlphaComponent(0.3).cgColor,
+            UIColor.systemBackground.withAlphaComponent(0.1).cgColor,
+            UIColor.systemBackground.cgColor
+        ]
+        gradient.locations = [0.0, 0.5, 0.8, 1.0]
+        return gradient
+    }()
+    
+    // Card container cho thông tin profile
+    private let profileCard: UIView = {
+        let view = UIView()
+        view.backgroundColor = .secondarySystemBackground
+        view.layer.cornerRadius = 24
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOpacity = 0.1
+        view.layer.shadowOffset = CGSize(width: 0, height: 4)
+        view.layer.shadowRadius = 12
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    // Avatar với shadow và border gradient
     private let avatarImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
-        iv.layer.cornerRadius = 12
-        iv.layer.borderWidth = 2
-        iv.layer.borderColor = UIColor.blue.cgColor
+        iv.layer.cornerRadius = 16
+        iv.layer.borderWidth = 1
+        iv.layer.borderColor = UIColor.white.cgColor
+        iv.backgroundColor = .systemGray5
+        
+        // Shadow cho avatar
+        iv.layer.shadowColor = UIColor.black.cgColor
+        iv.layer.shadowOpacity = 0.3
+        iv.layer.shadowOffset = CGSize(width: 0, height: 4)
+        iv.layer.shadowRadius = 8
+        
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
     
-    // Tên
+    // Tên người với màu nổi bật
     private let nameLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 22, weight: .bold)
+        label.font = .systemFont(ofSize: 26, weight: .bold)
+        label.textColor = .label
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private let jobLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 15, weight: .semibold)
         label.textColor = .label
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    // job
-    private let jobLabel: UILabel = {
+    // Biography title
+    private let bioTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .secondaryLabel
+        label.text = "Biography"
+        label.font = .systemFont(ofSize: 20, weight: .bold)
+        label.textColor = .systemIndigo
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -70,38 +113,39 @@ class PersonViewController : UIViewController{
     private let bioLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 0
-        label.font = .systemFont(ofSize: 14, weight: .regular)
+        label.font = .systemFont(ofSize: 15, weight: .regular)
         label.textColor = .secondaryLabel
         label.textAlignment = .justified
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    // Known for
+    // Known for với icon
     private let knownForTitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Known for"
-        label.textColor = .orange
-        label.font = .systemFont(ofSize: 18, weight: .semibold)
+        label.text = "🎬 Known for"
+        label.textColor = .systemTeal
+        label.font = .systemFont(ofSize: 20, weight: .bold)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    // View All
+    // View All button
     private let viewAllButton : UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("View all", for: .normal)
-        button.setTitleColor(.systemRed, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14)
+        button.setTitle("View all →", for: .normal)
+        button.setTitleColor(.systemPink, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
     
-    // Phim
+    // Phim collection view
     private let moviesCollectionView : UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         layout.itemSize = CGSize(width: 120, height: 240)
+        layout.minimumLineSpacing = 16
         
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .clear
@@ -118,11 +162,16 @@ class PersonViewController : UIViewController{
         fetchData()
     }
     
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        gradientLayer.frame = headerImageView.bounds
+    }
+    
     // Xử lý view all button
     @objc private func handleViewAll (){
         let detaiGrid = MovieGridViewController()
         detaiGrid.movies = movies
-        detaiGrid.pageTitle = "Similar Movies"
+        detaiGrid.pageTitle = "Filmography"
         detaiGrid.listType = .none
         navigationController?.pushViewController(detaiGrid, animated: true)
     }
@@ -132,9 +181,14 @@ class PersonViewController : UIViewController{
         scrollView.addSubview(contentView)
         
         contentView.addSubview(headerImageView)
-        contentView.addSubview(avatarImageView)
-        contentView.addSubview(nameLabel)
-        contentView.addSubview(jobLabel)
+        headerImageView.layer.addSublayer(gradientLayer)
+        
+        contentView.addSubview(profileCard)
+        profileCard.addSubview(avatarImageView)
+        profileCard.addSubview(nameLabel)
+        profileCard.addSubview(jobLabel)
+        
+        contentView.addSubview(bioTitleLabel)
         contentView.addSubview(bioLabel)
         contentView.addSubview(knownForTitleLabel)
         contentView.addSubview(moviesCollectionView)
@@ -164,24 +218,43 @@ class PersonViewController : UIViewController{
             headerImageView.topAnchor.constraint(equalTo: contentView.topAnchor),
             headerImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             headerImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            headerImageView.heightAnchor.constraint(equalToConstant: 250),
+            headerImageView.heightAnchor.constraint(equalToConstant: 280),
             
-            // Avatar
-            avatarImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            avatarImageView.bottomAnchor.constraint(equalTo: headerImageView.bottomAnchor, constant: 30),
-            avatarImageView.widthAnchor.constraint(equalToConstant: 100),
-            avatarImageView.heightAnchor.constraint(equalToConstant: 140),
+            // Profile Card
+            profileCard.topAnchor.constraint(equalTo: headerImageView.bottomAnchor, constant: -60),
+            profileCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            profileCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             
-            // Name & Job
+            // Avatar - nằm trong card
+            avatarImageView.topAnchor.constraint(equalTo: profileCard.topAnchor, constant: 20),
+            avatarImageView.leadingAnchor.constraint(equalTo: profileCard.leadingAnchor, constant: 20),
+            avatarImageView.widthAnchor.constraint(equalToConstant: 110),
+            avatarImageView.heightAnchor.constraint(equalToConstant: 150),
+            
+            // Name
             nameLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 16),
-            nameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            nameLabel.topAnchor.constraint(equalTo: headerImageView.bottomAnchor, constant: 10),
+            nameLabel.trailingAnchor.constraint(equalTo: profileCard.trailingAnchor, constant: -20),
+            nameLabel.topAnchor.constraint(equalTo: avatarImageView.topAnchor, constant: 10),
             
+            // Job Container
             jobLabel.leadingAnchor.constraint(equalTo: nameLabel.leadingAnchor),
-            jobLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 4),
+            jobLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 12),
+            jobLabel.heightAnchor.constraint(equalToConstant: 36),
+            
+            jobLabel.leadingAnchor.constraint(equalTo: jobLabel.leadingAnchor, constant: 12),
+            jobLabel.trailingAnchor.constraint(equalTo: jobLabel.trailingAnchor, constant: -12),
+            jobLabel.centerYAnchor.constraint(equalTo: jobLabel.centerYAnchor),
+            
+            // Bottom của card phải dưới cùng avatar hoặc job
+            profileCard.bottomAnchor.constraint(equalTo: avatarImageView.bottomAnchor, constant: 20),
+            
+            // Biography Title
+            bioTitleLabel.topAnchor.constraint(equalTo: profileCard.bottomAnchor, constant: 27),
+            bioTitleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            bioTitleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             
             // Bio
-            bioLabel.topAnchor.constraint(equalTo: jobLabel.bottomAnchor, constant: 5),
+            bioLabel.topAnchor.constraint(equalTo: bioTitleLabel.bottomAnchor, constant: 12),
             bioLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             bioLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             
@@ -199,7 +272,7 @@ class PersonViewController : UIViewController{
             moviesCollectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             moviesCollectionView.heightAnchor.constraint(equalToConstant: 240),
             
-            // Neo đáy để ScrollView
+            // Neo đáy để ScrollView hoạt động
             moviesCollectionView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
         ])
     }
@@ -222,7 +295,7 @@ class PersonViewController : UIViewController{
                     // Lấy ảnh của phim nổi tiếng nhất làm ảnh nền Header
                     if let bestMovie = movies.first, let backdrop = bestMovie.backDropPath {
                         let url = Constants.imageBaseURL + backdrop
-                        self.headerImageView.downloadImage(from: url) 
+                        self.headerImageView.downloadImage(from: url)
                     }
                 }
             } catch {
@@ -233,7 +306,25 @@ class PersonViewController : UIViewController{
     
     private func updateUI(with person: Person) {
         nameLabel.text = person.name
-        jobLabel.text = person.knownForDepartment
+        
+        // Thêm icon cho job
+        if let job = person.knownForDepartment {
+            let icon: String
+            switch job.lowercased() {
+            case "acting":
+                icon = ""
+            case "directing":
+                icon = "🎬 "
+            case "writing":
+                icon = "✍️ "
+            case "production":
+                icon = "🎞️ "
+            default:
+                icon = "⭐ "
+            }
+            jobLabel.text = icon + job
+        }
+        
         bioLabel.text = person.biography.isEmpty ? "No biography available." : person.biography
         
         if let path = person.profilePath {
@@ -253,8 +344,6 @@ extension PersonViewController: UICollectionViewDelegate, UICollectionViewDataSo
             return UICollectionViewCell()
         }
         cell.configure(with: movies[indexPath.row], isBig: false)
-        cell.layer.cornerRadius = 8
-        cell.layer.masksToBounds = true
         return cell
     }
     
@@ -265,4 +354,3 @@ extension PersonViewController: UICollectionViewDelegate, UICollectionViewDataSo
         navigationController?.pushViewController(detailVC, animated: true)
     }
 }
-

@@ -235,4 +235,21 @@ class NetworkManager {
     }
     
     
+    // Lấy chi tiết phim
+    func getMovieDetail (id: Int) async throws -> MovieDetailResponse{
+        let endpoint = "\(Constants.baseURL)/movie/\(id)?api_key=\(Constants.apiKey)"
+        guard let url = URL(string:endpoint) else {
+            throw NetworkError.invalidURL
+        }
+        
+        let (data, response) = try await session.data(from: url)
+        guard let httpResponse = response as? HTTPURLResponse , httpResponse.statusCode == 200 else {
+            throw NetworkError.invalidResponse
+        }
+        
+        let result = try JSONDecoder().decode(MovieDetailResponse.self, from: data)
+        return result
+        
+    }
+    
 }
