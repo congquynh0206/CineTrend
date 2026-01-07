@@ -63,17 +63,18 @@ class SearchResultsViewController: UIViewController {
         isLoadingMore = true
         Task{
             do{
-                var newMovies : [Movie] = []
-                newMovies = try await NetworkManager.shared.searchMovies(query: searchQuery, page: currentPage)
+                let newMovies : MovieResponse
+                newMovies = try await NetworkManager.shared.request(.search(query: searchQuery, page: currentPage))
                 print("Load lần : \(currentPage) - tổng phim: \(movies.count)")
                 DispatchQueue.main.async {
-                    if !newMovies.isEmpty {
+                    if newMovies.results.isEmpty {
+                        return
+                    } else {
                         self.currentPage += 1
+                        self.movies.append(contentsOf: newMovies.results.filter{$0.posterPath != nil})
+                        self.isLoadingMore = false
+                        self.searchCollectionView.reloadData()
                     }
-                    
-                    self.movies.append(contentsOf: newMovies)
-                    self.isLoadingMore = false
-                    self.searchCollectionView.reloadData()
                 }
             }catch{
                 print("Looi seach: \(error)")

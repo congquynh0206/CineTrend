@@ -240,7 +240,7 @@ class DetailViewController : UIViewController {
         guard let movie = movie else{return}
         Task{
             do{
-                let detail = try await NetworkManager.shared.getMovieDetail(id: movie.id)
+                let detail : MovieDetailResponse = try await NetworkManager.shared.request(.movieDetail(id: movie.id))
                 DispatchQueue.main.async {
                     self.updateDetailUI(with: detail)
                 }
@@ -384,8 +384,8 @@ class DetailViewController : UIViewController {
         
         Task {
             do {
-                let videos = try await NetworkManager.shared.getMovieVideos(movieId: movie.id)
-                let trailer = videos.first { video in
+                let videos : VideoResponse = try await NetworkManager.shared.request(.videos(movieId: movie.id))
+                let trailer = videos.results.first { video in
                     return video.site == "YouTube" && (video.type == "Trailer" || video.type == "Teaser")
                 }
                 
@@ -460,8 +460,8 @@ class DetailViewController : UIViewController {
         guard let movie = movie else { return }
         Task {
             do {
-                let cast = try await NetworkManager.shared.getMovieCredits(movieId: movie.id)
-                self.castList = Array(cast.prefix(10))
+                let cast : CreditsResponse = try await NetworkManager.shared.request(.credits(movieId: movie.id))
+                self.castList = Array(cast.cast.prefix(10))
                 DispatchQueue.main.async {
                     self.castCollectionView.reloadData()
                 }
@@ -476,8 +476,8 @@ class DetailViewController : UIViewController {
         guard let movie = movie else {return}
         Task{
             do{
-                let similar = try await NetworkManager.shared.getSimilarMoives(movieId: movie.id)
-                self.similarMovies = Array(similar)
+                let similar : MovieResponse = try await NetworkManager.shared.request(.similar(id: movie.id))
+                self.similarMovies = Array(similar.results.filter{ $0.posterPath != nil})
                 DispatchQueue.main.async {
                     self.similarCollectionView.reloadData()
                 }

@@ -64,24 +64,25 @@ class MovieGridViewController: UIViewController {
         let nextPage = currentPage + 1
         Task{
             do{
-                var newMovies : [Movie] = []
+                let newMovies : MovieResponse
                 switch listType {
                 case .trending:
-                    newMovies = try await NetworkManager.shared.getTrendingMovies(page: nextPage)
+                    newMovies = try await NetworkManager.shared.request(.trending(page: nextPage))
                 case .nowPlaying:
-                    newMovies = try await NetworkManager.shared.getNowPlayingMovies(page: nextPage)
+                    newMovies = try await NetworkManager.shared.request(.nowPlaying(page: nextPage))
                 case .upcoming:
-                    newMovies = try await NetworkManager.shared.getUpcomingMovies(page: nextPage)
+                    newMovies = try await NetworkManager.shared.request(.upcoming(page: nextPage))
                 case .none:
-                    break
+                    self.isLoadingMore = false
+                    return
                 }
                 DispatchQueue.main.async {
                     // heets phim
-                    if newMovies.isEmpty{
+                    if newMovies.results.isEmpty{
                         self.isLoadingMore = false
                         return
                     }
-                    self.movies.append(contentsOf: newMovies)
+                    self.movies.append(contentsOf: newMovies.results.filter{$0.posterPath != nil})
                     self.currentPage = nextPage
                     self.isLoadingMore = false
                     self.collectionView.reloadData()

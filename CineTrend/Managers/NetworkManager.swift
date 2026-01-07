@@ -7,11 +7,63 @@
 
 import Foundation
 
+// Các lỗi có thể xảy ra
 enum NetworkError: Error {
     case invalidURL
-    case unableToComplete
     case invalidResponse
-    case invalidData
+    case decodingError(Error) // Lỗi chi tiết
+    case unknownError
+}
+
+// Các API - endpoint
+enum Endpoint {
+    case trending(page: Int)
+    case nowPlaying(page: Int)
+    case upcoming(page: Int)
+    case similar(id: Int)
+    case movieDetail(id: Int)
+    case search(query: String, page: Int)
+    case videos(movieId: Int)
+    case credits(movieId: Int)
+    case personDetail(id: Int)
+    case personMovieCredits(id: Int)
+    
+    // Đường dẫn tương ứng
+    var path: String {
+        switch self {
+        case .trending:             return "/trending/movie/day"
+        case .nowPlaying:           return "/movie/now_playing"
+        case .upcoming:             return "/movie/upcoming"
+        case .similar(let id):      return "/movie/\(id)/similar"
+        case .movieDetail(let id):  return "/movie/\(id)"
+        case .search:               return "/search/movie"
+        case .videos(let id):       return "/movie/\(id)/videos"
+        case .credits(let id):      return "/movie/\(id)/credits"
+        case .personDetail(let id): return "/person/\(id)"
+        case .personMovieCredits(let id): return "/person/\(id)/movie_credits"
+        }
+    }
+    
+    // Tạo URL hoàn chỉnh kèm tham số
+    var url: URL? {
+        var components = URLComponents(string: Constants.baseURL + path)
+        var queryItems = [URLQueryItem(name: "api_key", value: Constants.apiKey)]
+        
+        // Thêm các tham số riêng tuỳ từng loại request
+        switch self {
+        case .trending(let page), .nowPlaying(let page), .upcoming(let page), .search(_, let page):
+            queryItems.append(URLQueryItem(name: "page", value: String(page)))
+        default: break
+        }
+        
+        // Nếu là search thì thêm query
+        if case .search(let query, _) = self {
+            queryItems.append(URLQueryItem(name: "query", value: query))
+        }
+        
+        components?.queryItems = queryItems
+        return components?.url
+    }
 }
 
 class NetworkManager {
@@ -26,230 +78,32 @@ class NetworkManager {
         self.session = URLSession(configuration: config)
     }
     
-    // Hàm lấy phim Trending
-    func getTrendingMovies(page : Int = 1) async throws -> [Movie] {
-        let endpoint = "\(Constants.baseURL)/trending/movie/day?api_key=\(Constants.apiKey)&page=\(page)"
+    // Generic
+    func request<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
         
-        guard let url = URL(string: endpoint) else {
+        guard let url = endpoint.url else {
             throw NetworkError.invalidURL
         }
+        
+        // Gọi mạng
         let (data, response) = try await session.data(from: url)
         
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+        // Check Status Code
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
             throw NetworkError.invalidResponse
         }
         
-        // Dịch JSON sang Swift
+        // Decode
         do {
             let decoder = JSONDecoder()
-            let result = try decoder.decode(MovieResponse.self, from: data)
-            let movies = result.results
-                .filter { $0.posterPath != nil }
-            return movies
+            decoder.keyDecodingStrategy = .useDefaultKeys // Hoặc .convertFromSnakeCase nếu cần
+            
+            let result = try decoder.decode(T.self, from: data)
+            return result
         } catch {
-            print("Lỗi dịch dữ liệu: \(error)")
-            throw NetworkError.invalidData
+            print("Lỗi Decode tại API [\(endpoint.path)]: \(error)")
+            throw NetworkError.decodingError(error)
         }
     }
-    
-    //Hàm lấy phim tương tự
-    func getSimilarMoives(movieId : Int) async throws -> [Movie]{
-        let endpoint = "\(Constants.baseURL)/movie/\(movieId)/similar?api_key=\(Constants.apiKey)"
-        
-        guard let url = URL(string: endpoint) else{
-            throw NetworkError.invalidURL
-        }
-        let (data,response) = try await session.data(from: url)
-        
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else{
-            throw NetworkError.invalidResponse
-        }
-        do{
-            let result = try JSONDecoder().decode(MovieResponse.self, from: data)
-            let movies = result.results
-                .filter { $0.posterPath != nil }
-            return movies
-        }catch{
-            print ("Loi lay phim lien quan")
-            throw NetworkError.invalidData
-        }
-    }
-    
-    
-    // Ham lay phim dang chieu
-    func getNowPlayingMovies (page : Int = 1) async throws -> [Movie]{
-        let endpoint = "\(Constants.baseURL)/movie/now_playing?api_key=\(Constants.apiKey)&page=\(page)"
-        
-        guard let url = URL(string: endpoint) else {
-            throw NetworkError.invalidURL
-        }
-        
-        let (data, response) = try await session.data(from: url)
-        
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else{
-            throw NetworkError.invalidResponse
-        }
-        do {
-            let decoder = JSONDecoder()
-            let result = try decoder.decode(MovieResponse.self, from: data)
-            let movies = result.results
-                .filter { $0.posterPath != nil }
-            return movies
-        }catch {
-            throw NetworkError.invalidData
-        }
-    }
-    
-    
-    // Hàm lấy phim Sắp chiếu
-    func getUpcomingMovies(page : Int = 1) async throws -> [Movie] {
-        let endpoint = "\(Constants.baseURL)/movie/upcoming?api_key=\(Constants.apiKey)&page=\(page)"
-        guard let url = URL(string: endpoint) else { throw NetworkError.invalidURL }
-        
-        let (data, response) = try await session.data(from: url)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw NetworkError.invalidResponse
-        }
-        do{
-            let result = try JSONDecoder().decode(MovieResponse.self, from: data)
-            let movies = result.results
-                .filter { $0.posterPath != nil }
-            return movies
-        }catch{
-            throw NetworkError.invalidData
-        }
-    }
-    
-    
-    
-    // Hàm lấy danh sách trailer của phim
-    func getMovieVideos(movieId: Int) async throws -> [Video] {
-        // Endpoint
-        let endpoint = "\(Constants.baseURL)/movie/\(movieId)/videos?api_key=\(Constants.apiKey)"
-        
-        guard let url = URL(string: endpoint) else {
-            throw NetworkError.invalidURL
-        }
-        
-        let (data, response) = try await session.data(from: url)
-        
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw NetworkError.invalidResponse
-        }
-        
-        do {
-            let decoder = JSONDecoder()
-            let result = try decoder.decode(VideoResponse.self, from: data)
-            return result.results
-        } catch {
-            print("Lỗi decode video: \(error)")
-            throw NetworkError.invalidData
-        }
-        
-    }
-    
-    // Lấy danh sách diễn viên
-    func getMovieCredits(movieId: Int) async throws -> [Cast] {
-        let endpoint = "\(Constants.baseURL)/movie/\(movieId)/credits?api_key=\(Constants.apiKey)"
-        
-        guard let url = URL(string: endpoint) else { throw NetworkError.invalidURL }
-        
-        let (data, response) = try await session.data(from: url)
-        
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw NetworkError.invalidResponse
-        }
-        
-        do {
-            let decoder = JSONDecoder()
-            let result = try decoder.decode(CreditsResponse.self, from: data)
-            return result.cast
-        } catch {
-            print("Lỗi decode cast: \(error)")
-            throw NetworkError.invalidData
-        }
-    }
-    
-    
-    
-    // Lấy thông tin của 1 dvien
-    func getPersonDetail (id: Int) async throws-> Person{
-        let endpoint = "\(Constants.baseURL)/person/\(id)?api_key=\(Constants.apiKey)"
-        guard let url = URL(string: endpoint) else{
-            throw NetworkError.invalidURL
-        }
-        
-        let (data, response) = try await session.data(from: url)
-        
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw NetworkError.invalidResponse
-        }
-        do {
-            return try JSONDecoder().decode(Person.self, from: data)
-        }catch{
-            print("Lỗi lấy tt dvien")
-            throw NetworkError.invalidData
-        }
-    }
-    
-    // Lấy danh sách phim đã đóng của 1 dvien
-    func getPersonMovieCredits(id: Int) async throws -> [Movie] {
-        let endpoint = "\(Constants.baseURL)/person/\(id)/movie_credits?api_key=\(Constants.apiKey)"
-        guard let url = URL(string: endpoint) else { throw NetworkError.invalidURL }
-        
-        let (data, response) = try await session.data(from: url)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw NetworkError.invalidResponse
-        }
-        
-        let result = try JSONDecoder().decode(PersonMovieCreditsResponse.self, from: data)
-        // Lọc bớt phim không có poster
-        let movies = result.cast
-            .filter { $0.posterPath != nil }
-            .sorted { ($0.popularity ?? 0) > ($1.popularity ?? 0) }
-        return movies
-    }
-    
-    
-    // Search
-    func searchMovies(query: String, page : Int = 1) async throws -> [Movie] {
-        // "Iron Man" -> "Iron%20Man"
-        guard let queryEncoded = query.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else {
-            throw NetworkError.invalidURL
-        }
-        
-        let endpoint = "\(Constants.baseURL)/search/movie?api_key=\(Constants.apiKey)&query=\(queryEncoded)&page=\(page)"
-        
-        guard let url = URL(string: endpoint) else { throw NetworkError.invalidURL }
-        
-        let (data, response) = try await session.data(from: url)
-        
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw NetworkError.invalidResponse
-        }
-        
-        let result = try JSONDecoder().decode(MovieResponse.self, from: data)
-        let movies = result.results
-            .filter { $0.posterPath != nil }
-        return movies
-    }
-    
-    
-    // Lấy chi tiết phim
-    func getMovieDetail (id: Int) async throws -> MovieDetailResponse{
-        let endpoint = "\(Constants.baseURL)/movie/\(id)?api_key=\(Constants.apiKey)"
-        guard let url = URL(string:endpoint) else {
-            throw NetworkError.invalidURL
-        }
-        
-        let (data, response) = try await session.data(from: url)
-        guard let httpResponse = response as? HTTPURLResponse , httpResponse.statusCode == 200 else {
-            throw NetworkError.invalidResponse
-        }
-        
-        let result = try JSONDecoder().decode(MovieDetailResponse.self, from: data)
-        return result
-        
-    }
-    
 }

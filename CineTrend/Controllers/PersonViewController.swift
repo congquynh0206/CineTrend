@@ -289,18 +289,18 @@ class PersonViewController : UIViewController{
         Task {
             do {
                 // Gọi song song 2 API Info & Movies
-                async let personDetail = NetworkManager.shared.getPersonDetail(id: personId)
-                async let personMovies = NetworkManager.shared.getPersonMovieCredits(id: personId)
+                async let personDetail : Person = NetworkManager.shared.request(.personDetail(id: personId))
+                async let personMovies : PersonMovieCreditsResponse = NetworkManager.shared.request(.personMovieCredits(id: personId))
                 
-                let (person, movies) = try await (personDetail, personMovies)
-                self.movies = movies
+                let (person, moviesResponse) = try await (personDetail, personMovies)
+                self.movies = moviesResponse.cast.filter{$0.posterPath != nil}
                 
                 DispatchQueue.main.async {
                     self.updateUI(with: person)
                     self.moviesCollectionView.reloadData()
                     
                     // Lấy ảnh của phim nổi tiếng nhất làm ảnh nền Header
-                    if let bestMovie = movies.first, let backdrop = bestMovie.backDropPath {
+                    if let bestMovie = self.movies.first, let backdrop = bestMovie.backDropPath {
                         let url = Constants.imageBaseURL + backdrop
                         self.headerImageView.downloadImage(from: url)
                     }

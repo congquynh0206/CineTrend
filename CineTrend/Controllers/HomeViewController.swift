@@ -234,16 +234,16 @@ class HomeViewController: UIViewController {
         Task {
             do {
                 // Gọi 3 API cùng lúc
-                async let trending = NetworkManager.shared.getTrendingMovies()
-                async let nowPlaying = NetworkManager.shared.getNowPlayingMovies()
-                async let upcoming = NetworkManager.shared.getUpcomingMovies()
+                async let trending : MovieResponse = NetworkManager.shared.request(.trending(page: 1))
+                async let nowPlaying : MovieResponse = NetworkManager.shared.request(.nowPlaying(page: 1))
+                async let upcoming : MovieResponse = NetworkManager.shared.request(.upcoming(page: 1))
                 
                 // Chờ cả 3 xong
                 let (trend, now, up) = try await (trending, nowPlaying, upcoming)
                 
-                self.trendingMovies = trend
-                self.nowPlayingMovies = now
-                self.upcomingMovies = up
+                self.trendingMovies = trend.results.filter{ $0.posterPath != nil}
+                self.nowPlayingMovies = now.results.filter{ $0.posterPath != nil}
+                self.upcomingMovies = up.results.filter{ $0.posterPath != nil}
                 
                 DispatchQueue.main.async {
                     self.loadingSpinner.stopAnimating()
